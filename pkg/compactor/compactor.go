@@ -546,13 +546,18 @@ func (c *Compactor) compactUser(ctx context.Context, userID string) error {
 		c.garbageCollectedBlocks,
 	)
 
+	var (
+		compactDir = path.Join(c.compactorCfg.DataDir, "compact")
+		// downsamplingDir = path.Join(c.compactorCfg.DataDir, "downsampling")
+	)
+
 	compactor, err := compact.NewBucketCompactor(
 		ulogger,
 		syncer,
 		grouper,
 		c.tsdbPlanner,
 		c.tsdbCompactor,
-		path.Join(c.compactorCfg.DataDir, "compact"),
+		compactDir,
 		bucket,
 		c.compactorCfg.CompactionConcurrency,
 	)
@@ -563,6 +568,21 @@ func (c *Compactor) compactUser(ctx context.Context, userID string) error {
 	if err := compactor.Compact(ctx); err != nil {
 		return errors.Wrap(err, "compaction")
 	}
+
+	// downsampler := NewDownsamper(
+	// 	ulogger,
+	// 	syncer,
+	// 	bucket,
+	// 	reg,
+	// 	downsamplingDir,
+	// 	int64(24*time.Hour),   // max level
+	// 	int64(time.Hour*24*3), // 5m
+	// 	int64(time.Hour*24*5), // 1h
+	// )
+
+	// if err := downsampler.Downsample(ctx); err != nil {
+	// 	return errors.Wrap(err, "downsampling")
+	// }
 
 	return nil
 }
